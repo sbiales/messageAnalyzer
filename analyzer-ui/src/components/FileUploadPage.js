@@ -61,6 +61,40 @@ class FileUploadPage extends Component {
         };
     }
 
+    onSubmit = (e) => {
+        e.preventDefault();
+        var data = new FormData();
+        data.append('file', this.state.file);
+        data.append('optIn', this.state.optIn);
+        if (this.state.optIn) {
+            data.append('user1', JSON.stringify({
+                age: this.state.u1Age,
+                lang: this.state.u1lang,
+                gender: this.state.u1Gender,
+            }));
+            data.append('user2', JSON.stringify({
+                age: this.state.u2Age,
+                lang: this.state.u2lang,
+                gender: this.state.u2Gender,
+            }));
+            data.append('relationship', this.state.relationship);
+        }
+        return axios({
+            method: "POST",
+            url: "http://localhost:5000/upload",
+            data: data,
+            headers: {
+              'Content-Type': 'multipart/form-data; boundary=${form._boundary}',
+              'Access-Control-Allow-Origin': '*'
+            }
+        }).catch(error => {
+            console.log(error.response)
+            this.setState({
+              uploadErrorMsgs: [...this.state.uploadErrorMsgs, {name: this.state.file.name, reason: (error.response && error.response.hasOwnProperty('data')) ? error.response.data : error.response }],
+              showUploadError: true});
+          });
+    }
+
     onDrop = acceptedFiles => {
         console.log(acceptedFiles)
           // Initial FormData
@@ -111,7 +145,7 @@ class FileUploadPage extends Component {
                     </Typography>
                 </Paper>
                 <Paper style={{padding: 10, maxWidth: 800}}>
-                        <form onSubmit={(values) => console.log(this.state)}>
+                        <form onSubmit={this.onSubmit}>
                             <div style={{border: '4px dashed #4b9ec9'}}>
                                 <Dropzone 
                                     onDrop={this.onDrop}
@@ -145,6 +179,7 @@ class FileUploadPage extends Component {
                             <TextField 
                                 type="number"
                                 value={this.state.u1Age}
+                                onChange={(event) => {this.setState({u1Age: event.target.value})}}
                                 InputProps={{
                                     inputProps: { 
                                         max: 100, min: 1 
@@ -158,6 +193,7 @@ class FileUploadPage extends Component {
                             <TextField 
                                 type="number"
                                 value={this.state.u2Age}
+                                onChange={(event) => {this.setState({u2Age: event.target.value})}}
                                 InputProps={{
                                     inputProps: { 
                                         max: 100, min: 1 

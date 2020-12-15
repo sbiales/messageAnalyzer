@@ -1,6 +1,50 @@
 import json
 import emoji
 import regex
+import os
+import time
+from flask import Flask, request
+from flask_cors import CORS
+
+UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/uploads'
+TMP_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/temp'
+META_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/meta'
+app = Flask(__name__)
+CORS(app)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['TMP_FOLDER'] = TMP_FOLDER
+app.config['META_FOLDER'] = META_FOLDER
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    optIn = request.form['optIn']
+    filename = str(time.time()) + '.json'
+    if file and optIn:
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.mkdir(app.config['UPLOAD_FOLDER'])
+        if not os.path.exists(app.config['META_FOLDER']):
+            os.mkdir(app.config['META_FOLDER'])
+        file.stream.seek(0) #some bug is causing the save to be called twice
+        #TODO: anonymize/preprocess first
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        # Save metadata
+        with open(os.path.join(app.config['META_FOLDER'], filename), 'w') as metaFile:
+              data = {}
+              data['user1'] = json.loads(request.form['user1'])
+              data['user2'] = json.loads(request.form['user2'])
+              data['relationship'] = request.form['relationship']
+              json.dump(data, metaFile)
+              return filename, 200
+    elif file:
+        if not os.path.exists(app.config['TMP_FOLDER']):
+            os.mkdir(app.config['TMP_FOLDER'])
+        file.stream.seek(0) #some bug is causing the save to be called twice
+        #TODO: anonymize/preprocess first
+        file.save(os.path.join(app.config['TMP_FOLDER'], filename))
+        return filename, 200
+    return 'No file uploaded', 400
 
 def preprocess(messages):
     # Change all from names to User1 and User2
@@ -79,56 +123,59 @@ def extractEmoji(messages):
     grouped.sort(key=lambda x: x[1], reverse=True)
     return grouped
 
-with open('C:\\Users\\siena\\Downloads\\Telegram Desktop\\ChatExport_2020-11-23\\filip.json', 'r', encoding='utf-8') as file:
-#with open('.\\test.json', 'r', encoding='utf-8') as file:
-    messageJson = json.load(file)
-    messages = messageJson['messages']
-
-    # Data preprocessing
-    messages = preprocess(messages)
-    users = list({m['from_id'] for m in messages})
-    user1Messages = [m for m in messages if m['from_id'] == users[0]]
-    user2Messages = [m for m in messages if m['from_id'] == users[1]]
-
-##    with open('user1.txt', 'w', encoding='utf-8') as u1:
-##        for t in user1Messages:
-##            u1.write(t + '\n')
-##    with open('user2.txt', 'w', encoding='utf-8') as u2:
-##        for t in user2Messages:
-##            u2.write(t + '\n')
-##    with open('total.txt', 'w', encoding='utf-8') as totalFile:
-##        for m in messages:
-##            totalFile.write(str(m['from_id']) + ': ' + m['text'] + '\n')
-
-    # Graph of texts per day (from each person)
-    daySorted = organizeByDate(messages)
-    #print(daySorted)
-
-    # Chart of hours of the day that you text most frequently
-    hourSorted = organizeByHour(messages)
-    #print(hourSorted)
-    print('Most frequent texting hour: ' + max(hourSorted, key=lambda key: hourSorted[key]))
-    
-    # Average texts per day
-    totalDays = len(daySorted.keys())
-    totalTexts = sum(list({day['total'] for day in daySorted.values()}))
-    avgTextsPerDay = totalTexts/totalDays
-    print('Average texts per day: ' + str(int(avgTextsPerDay)))
-
-    # Average words per day?
-
-    # Average words per text
-
-
-    # Favorite emoji
-    
-    #print(user2Messages)
-    user1Emoji = extractEmoji(user1Messages)
-    print(str(users[0]) + ': ')
-    print(user1Emoji[:25])
-
-    user2Emoji = extractEmoji(user2Messages)
-    print(str(users[1]) + ': ')
-    print(user2Emoji[:25])
-
-    # Most frequent words/collocations
+# =============================================================================
+# with open('C:\\Users\\siena\\Downloads\\Telegram Desktop\\ChatExport_2020-11-23\\filip.json', 'r', encoding='utf-8') as file:
+# #with open('.\\test.json', 'r', encoding='utf-8') as file:
+#     messageJson = json.load(file)
+#     messages = messageJson['messages']
+# 
+#     # Data preprocessing
+#     messages = preprocess(messages)
+#     users = list({m['from_id'] for m in messages})
+#     user1Messages = [m for m in messages if m['from_id'] == users[0]]
+#     user2Messages = [m for m in messages if m['from_id'] == users[1]]
+# 
+# ##    with open('user1.txt', 'w', encoding='utf-8') as u1:
+# ##        for t in user1Messages:
+# ##            u1.write(t + '\n')
+# ##    with open('user2.txt', 'w', encoding='utf-8') as u2:
+# ##        for t in user2Messages:
+# ##            u2.write(t + '\n')
+# ##    with open('total.txt', 'w', encoding='utf-8') as totalFile:
+# ##        for m in messages:
+# ##            totalFile.write(str(m['from_id']) + ': ' + m['text'] + '\n')
+# 
+#     # Graph of texts per day (from each person)
+#     daySorted = organizeByDate(messages)
+#     #print(daySorted)
+# 
+#     # Chart of hours of the day that you text most frequently
+#     hourSorted = organizeByHour(messages)
+#     #print(hourSorted)
+#     print('Most frequent texting hour: ' + max(hourSorted, key=lambda key: hourSorted[key]))
+#     
+#     # Average texts per day
+#     totalDays = len(daySorted.keys())
+#     totalTexts = sum(list({day['total'] for day in daySorted.values()}))
+#     avgTextsPerDay = totalTexts/totalDays
+#     print('Average texts per day: ' + str(int(avgTextsPerDay)))
+# 
+#     # Average words per day?
+# 
+#     # Average words per text
+# 
+# 
+#     # Favorite emoji
+#     
+#     #print(user2Messages)
+#     user1Emoji = extractEmoji(user1Messages)
+#     print(str(users[0]) + ': ')
+#     print(user1Emoji[:25])
+# 
+#     user2Emoji = extractEmoji(user2Messages)
+#     print(str(users[1]) + ': ')
+#     print(user2Emoji[:25])
+# 
+#     # Most frequent words/collocations
+# 
+# =============================================================================
