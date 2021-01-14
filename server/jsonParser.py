@@ -1,14 +1,16 @@
 import json
 import emoji
 import regex
+import re
 import os
 import time
 from flask import Flask, request
 from flask_cors import CORS
+import sys
 
-UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/uploads'
-TMP_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/temp'
-META_FOLDER = os.path.dirname(os.path.realpath(__file__)) + '/meta'
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'uploads')
+TMP_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'temp')
+META_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'meta')
 app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -19,51 +21,62 @@ app.config['META_FOLDER'] = META_FOLDER
 def upload():
     file = request.files['file']
     optIn = request.form['optIn']
-    filename = str(time.time()) + '.json'
-    if file and optIn:
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            os.mkdir(app.config['UPLOAD_FOLDER'])
-        if not os.path.exists(app.config['META_FOLDER']):
-            os.mkdir(app.config['META_FOLDER'])
-        file.stream.seek(0) #some bug is causing the save to be called twice
-        #TODO: anonymize/preprocess first
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    filename =  str(time.time()) + '.json'
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.mkdir(app.config['UPLOAD_FOLDER'])
+    if not os.path.exists(app.config['META_FOLDER']):
+        os.mkdir(app.config['META_FOLDER'])
+    if not os.path.exists(app.config['TMP_FOLDER']):
+        os.mkdir(app.config['TMP_FOLDER'])
+    
+    if file:            
+        filetype = file.filename.split('.')[-1]
+        content = file.read().decode('utf-8')
+        messages = []
+        # Preprocess the file before saving
+        if filetype == 'json':
+            #messageJson = json.load(file)
+            messageJson = json.loads(content)
+            messages = preprocessTelegram(messageJson['messages'])
+        elif filetype == 'txt':
+            #messages = preprocessWhatsApp(file.readlines())
+            messages = preprocessWhatsApp(content)
         
-        # Save metadata
-        with open(os.path.join(app.config['META_FOLDER'], filename), 'w') as metaFile:
-              data = {}
-              data['user1'] = json.loads(request.form['user1'])
-              data['user2'] = json.loads(request.form['user2'])
-              data['relationship'] = request.form['relationship']
-              json.dump(data, metaFile)
-              return filename, 200
-    elif file:
-        if not os.path.exists(app.config['TMP_FOLDER']):
-            os.mkdir(app.config['TMP_FOLDER'])
-        file.stream.seek(0) #some bug is causing the save to be called twice
-        #TODO: anonymize/preprocess first
-        file.save(os.path.join(app.config['TMP_FOLDER'], filename))
-        return filename, 200
+        if optIn is True:
+            newFile = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w')
+            #file.stream.seek(0) #some bug is causing the save to be called twice
+            #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            json.dump(messages, newFile)
+            newFile.close()
+            
+            # Save metadata
+            with open(os.path.join(app.config['META_FOLDER'], filename), 'w') as metaFile:
+                  data = {}
+                  data['user1'] = json.loads(request.form['user1'])
+                  data['user2'] = json.loads(request.form['user2'])
+                  data['relationship'] = request.form['relationship']
+                  json.dump(data, metaFile)
+            return filename, 200
+        else:
+            print(len(messages), file=sys.stderr)
+            newFile = open(os.path.join(app.config['TMP_FOLDER'], filename), 'w')
+            json.dump(messages, newFile, indent=2)
+            newFile.close()
+            #file.stream.seek(0) #some bug is causing the save to be called twice
+            #file.save(os.path.join(app.config['TMP_FOLDER'], filename))
+            return filename, 200
     return 'No file uploaded', 400
 
-def preprocess(messages):
-    # Change all from names to User1 and User2
-##    users = list({m['from'] for m in messages})
-##    print(users)
-##    if len(users) > 2:
-##        print('This analysis does not yet work for group chats. Please upload a personal conversation')
-##    for m in messages:
-##        m['from'] = m['from'].replace(users[0], 'User1').replace(users[1], 'User2')
-
-    # Better solution? Remove all from keys and base it only off of from_id
+def preprocessTelegram(messages):
     cleanMessages = []
     for m in messages:
         if m['type'] != 'message':
             continue
-        m.pop('from', None)
+        cleanM = {}
+        cleanM['from'] = m['from_id']
         datetime = m['date'].split('T')
-        m['date'] = datetime[0]
-        m['time'] = datetime[1]
+        cleanM['date'] = datetime[0]
+        cleanM['time'] = datetime[1]
         if 'sticker_emoji' in m:
             #m['sticker_emoji'] = emoji.demojize(m['sticker_emoji'])
             m['text'] =  m['sticker_emoji']
@@ -75,13 +88,43 @@ def preprocess(messages):
                     if type(part) is str:
                         text += part
                     elif type(part) is dict and 'text' in part:
-                        text += ' ' + part['text']
-                    else:
-                        print('HERE ' + part)
-                m['text'] = text
-        cleanMessages.append(m)
+                        text += ' ' + part['text'].replace('\n', ' ')
+                cleanM['text'] = text
+        elif 'text' in m:
+            cleanM['text'] = m['text'].replace('\n', ' ')
+        cleanMessages.append(cleanM)
     return cleanMessages
 
+def preprocessWhatsApp(chatText):
+    chatText = chatText.split('\n')
+    mediaRE = re.compile(r"(\<Media omitted\>)")
+    lineMetaRE = re.compile(r"(\d+\/\d+\/\d+),*\s(\d+:\d+)\s*(\w*)\s-\s(.*):\s")
+    
+    messages = []
+    message = {}
+    for line in chatText:
+        line = line
+        line = mediaRE.sub('', line)
+        # print(line)
+        match = lineMetaRE.match(line)
+        if match:
+            # If we match, it's the start of a new message, append the last and start a new one
+            if 'text' in message:
+                messages.append(message)
+                message = {}
+            time = match.group(2)
+            if match.group(3) == 'pm':
+                timeArr = time.split(':')
+                time = str(int(timeArr[0]) + 12) + ':' + timeArr[1]
+            
+            message['date'] = match.group(1)
+            message['time'] = time
+            message['from'] = match.group(4)
+            message['text'] = lineMetaRE.sub('', line).replace('\n', ' ')
+        elif 'text' in message:
+            message['text'] += line
+    return messages
+    
 
 def getTextContent(m):
     if 'text' in m:

@@ -57,11 +57,12 @@ class FileUploadPage extends Component {
           u2Lang: null,
           u1Gender: null,
           u2Gender: null,
-          relationship: null
+          relationship: null,
+          fileId: null
         };
     }
 
-    onSubmit = (e) => {
+    onSubmit = async (e) => {
         e.preventDefault();
         var data = new FormData();
         data.append('file', this.state.file);
@@ -79,7 +80,7 @@ class FileUploadPage extends Component {
             }));
             data.append('relationship', this.state.relationship);
         }
-        return axios({
+        var res = await axios({
             method: "POST",
             url: "http://localhost:5000/upload",
             data: data,
@@ -88,11 +89,23 @@ class FileUploadPage extends Component {
               'Access-Control-Allow-Origin': '*'
             }
         }).catch(error => {
-            console.log(error.response)
-            this.setState({
-              uploadErrorMsgs: [...this.state.uploadErrorMsgs, {name: this.state.file.name, reason: (error.response && error.response.hasOwnProperty('data')) ? error.response.data : error.response }],
-              showUploadError: true});
-          });
+            if (error.response) {
+                this.setState({
+                    uploadErrorMsgs: [...this.state.uploadErrorMsgs, {name: this.state.file.name, reason: (error.response && error.response.hasOwnProperty('data')) ? error.response.data : error.response }],
+                    showUploadError: true
+                });
+            } else {
+                this.setState({
+                    uploadErrorMsgs: [...this.state.uploadErrorMsgs, {name: this.state.file.name, reason: 'An unknown error occurred in upload' }],
+                    showUploadError: true
+                });
+            }
+        });
+        if (res) {
+            // TODO: Move this to a new page with graphs
+            this.setState({ fileId: res.data});
+        }
+
     }
 
     onDrop = acceptedFiles => {
@@ -269,6 +282,11 @@ class FileUploadPage extends Component {
                             <Button type="submit">Analyze</Button>
                         </form>
                 </Paper>
+                {this.state.fileId ? 
+                <Paper>
+                    <Typography>Thanks for submitting your file! In the future, you will be taken to a page to see your analysis</Typography>
+                </Paper>
+                : ''}
                 <Dialog
                 open={this.state.showUploadError}
                 onClose={() => this.setState({showUploadError: false, uploadErrorMsgs: []})}
