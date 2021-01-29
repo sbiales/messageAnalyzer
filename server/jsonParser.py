@@ -44,8 +44,6 @@ def upload():
         
         if optIn is True:
             newFile = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w')
-            #file.stream.seek(0) #some bug is causing the save to be called twice
-            #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             json.dump(messages, newFile)
             newFile.close()
             
@@ -58,12 +56,10 @@ def upload():
                   json.dump(data, metaFile)
             return filename, 200
         else:
-            print(len(messages), file=sys.stderr)
+            #print(len(messages), file=sys.stderr)
             newFile = open(os.path.join(app.config['TMP_FOLDER'], filename), 'w')
             json.dump(messages, newFile, indent=2)
             newFile.close()
-            #file.stream.seek(0) #some bug is causing the save to be called twice
-            #file.save(os.path.join(app.config['TMP_FOLDER'], filename))
             return filename, 200
     return 'No file uploaded', 400
 

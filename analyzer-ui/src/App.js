@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-import FileUploadPage from './components/FileUploadPage';
+import { BrowserRouter, Route } from "react-router-dom";
+import FileUploadPage from "./components/FileUploadPage";
+import PrivacyPage from "./components/PrivacyPage";
 import Header from './components/Header';
 //import logo from './logo.svg';
 import './App.css';
@@ -8,10 +10,11 @@ class App extends Component {
   render() {
       return (
       <div className="App">
-        <header className="App-header">
+        <BrowserRouter>
           <Header />
-          <FileUploadPage />
-        </header>
+          <Route exact path="/" component={FileUploadPage} />
+          <Route exact path="/privacy" component={PrivacyPage} />
+        </BrowserRouter>
       </div>
     );
   }

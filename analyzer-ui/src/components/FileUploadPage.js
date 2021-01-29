@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Dropzone from "react-dropzone";
 import { Dialog, Toolbar, Paper, Typography, Button, Checkbox, FormControl, FormControlLabel, TextField, InputLabel, MenuItem, Select, RadioGroup, Radio, FormLabel } from '@material-ui/core';
 import { Form, Field } from "react-final-form";
+import { withRouter } from "react-router-dom";
 import axios from "axios";
 
 const MAX_SIZE = 20971520; // 20MB
@@ -58,7 +59,6 @@ class FileUploadPage extends Component {
           u1Gender: null,
           u2Gender: null,
           relationship: null,
-          fileId: null
         };
     }
 
@@ -102,8 +102,9 @@ class FileUploadPage extends Component {
             }
         });
         if (res) {
-            // TODO: Move this to a new page with graphs
-            this.setState({ fileId: res.data});
+            // this.setState({ fileId: res.data});
+            await localStorage.setItem('id', res.data);
+            this.props.history.push('/results');
         }
 
     }
@@ -299,4 +300,4 @@ class FileUploadPage extends Component {
       }
 }
 
-export default FileUploadPage;
+export default withRouter(FileUploadPage);
