@@ -103,7 +103,8 @@ class FileUploadPage extends Component {
         });
         if (res) {
             // this.setState({ fileId: res.data});
-            await localStorage.setItem('id', res.data);
+            localStorage.setItem('id', res.data);
+            localStorage.setItem('optIn', this.state.optIn);
             this.props.history.push('/results');
         }
 
@@ -166,7 +167,7 @@ class FileUploadPage extends Component {
                                     onDropRejected={this.onDropRejected}
                                     multiple={false}
                                     accept=".json,.txt"
-                                    maxSize={MAX_SIZE}
+                                    // maxSize={MAX_SIZE}
                                 >
                                     {({getRootProps, getInputProps}) => (
                                         <div {...getRootProps()}>

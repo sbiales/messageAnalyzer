@@ -4,7 +4,7 @@ import regex
 import re
 import os
 import time
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sys
 
@@ -122,25 +122,52 @@ def preprocessWhatsApp(chatText):
     return messages
     
 
-def getTextContent(m):
-    if 'text' in m:
-        #m['text'] = emoji.demojize(m['text'])
-        return m['text']
-    if 'sticker_emoji' in m:
-        #m['sticker_emoji'] = emoji.demojize(m['sticker_emoji'])
-        return m['sticker_emoji']
-    print(m)
+# def getTextContent(m):
+#     if 'text' in m:
+#         #m['text'] = emoji.demojize(m['text'])
+#         return m['text']
+#     if 'sticker_emoji' in m:
+#         #m['sticker_emoji'] = emoji.demojize(m['sticker_emoji'])
+#         return m['sticker_emoji']
+#     print(m)
 
-def organizeByDate(messages):
+@app.route('/results/bydatecount/<fileId>/<optIn>', methods=['GET'])
+def organizeByDate(fileId, optIn):
+    messages = []
+    if optIn is True:
+        with open(os.path.join(app.config['UPLOAD_FOLDER'], fileId), 'r') as file:
+            messages = json.load(file)
+    else:
+        with open(os.path.join(app.config['TMP_FOLDER'], fileId), 'r') as file:
+            messages = json.load(file)
+
     dateDict = {}
     for m in messages:
-        from_id = m['from_id']
+        user = m['from']
         date = m['date']
-        dateDict.setdefault(date, {}).setdefault(from_id, []).append(m['text'])
-        dateDict[date].setdefault('total', 0)
-        dateDict[date]['total'] += 1
-    return dateDict
-
+        # dateDict.setdefault(date, {}).setdefault(user, []).append(m['text'])
+        # dateDict[date].setdefault('total', 0)
+        # dateDict[date]['total'] += 1
+        dateDict.setdefault(date, {}).setdefault(user, 0)
+        dateDict[date][user] += 1
+        
+    '''
+    byUser structure:
+        {
+            'user': {
+                date: date,
+                total: total
+            }
+        }
+    '''
+    byUser = {}
+    for d in dateDict.keys():
+        for u in dateDict[d].keys():
+            byUser.setdefault(u, []).append({ 'date': d, 'total': dateDict[d][u] })
+            
+    # byUser['startDate'] = messages[0]['date']
+    # byUser['endDate'] = messages[-1]['date']
+    return jsonify(byUser)
 
 def organizeByHour(messages):
     hourDict = {}

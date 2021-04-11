@@ -3,6 +3,7 @@ import { BrowserRouter, Route } from "react-router-dom";
 import FileUploadPage from "./components/FileUploadPage";
 import PrivacyPage from "./components/PrivacyPage";
 import Header from './components/Header';
+import Results from './components/Results';
 //import logo from './logo.svg';
 import './App.css';
 
@@ -14,6 +15,7 @@ class App extends Component {
           <Header />
           <Route exact path="/" component={FileUploadPage} />
           <Route exact path="/privacy" component={PrivacyPage} />
+          <Route exact path="/results" render={(props) => <Results {...props} />} />
         </BrowserRouter>
       </div>
     );
