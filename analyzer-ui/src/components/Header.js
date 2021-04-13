@@ -7,19 +7,19 @@ class Header extends Component {
         return(
             <div style={{width:'100%', marginBottom: 50 }}>
             <AppBar position="static" color="default">
-            <Toolbar style={{width:'100%'}}>
+            <Toolbar>
                 <Typography variant='h6' style={{flexGrow: 1}}>
-                    <Link exact to="/">
+                    <Link exact to="/" style={{ textDecoration: 'none', color: 'black' }}>
                         Analyze my messages!
                     </Link>
                 </Typography>
                 <Typography variant='h6' style={{flexGrow: 1}}>
-                    <Link exact to="/">
+                    <Link exact to="/" style={{ textDecoration: 'none', color: 'black' }}>
                         How do I download my messages?
                     </Link>
                 </Typography>
                 <Typography variant='h6' style={{flexGrow: 1}}>
-                    <Link exact to="/privacy">
+                    <Link exact to="/privacy" style={{ textDecoration: 'none', color: 'black' }}>
                         Privacy
                     </Link>
                 </Typography>

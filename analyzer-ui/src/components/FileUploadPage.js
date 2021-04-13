@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Dropzone from "react-dropzone";
-import { Dialog, Toolbar, Paper, Typography, Button, Checkbox, FormControl, FormControlLabel, TextField, InputLabel, MenuItem, Select, RadioGroup, Radio, FormLabel } from '@material-ui/core';
+import { Dialog, Toolbar, Paper, Grid, Typography, Button, Checkbox, FormControl, FormControlLabel, TextField, InputLabel, MenuItem, Select, RadioGroup, Radio, FormLabel } from '@material-ui/core';
 import { Form, Field } from "react-final-form";
 import { withRouter } from "react-router-dom";
 import axios from "axios";
@@ -82,7 +82,7 @@ class FileUploadPage extends Component {
         }
         var res = await axios({
             method: "POST",
-            url: "http://localhost:5000/upload",
+            url: "http://localhost:3011/upload",
             data: data,
             headers: {
               'Content-Type': 'multipart/form-data; boundary=${form._boundary}',
@@ -151,7 +151,9 @@ class FileUploadPage extends Component {
       render() {
           return(
             <div style={{padding: '20px'}}>
-                <Paper style={{maxWidth: 800}}>
+                <Grid container column spacing={3} justify='center' alignItems='center'>
+                    <Grid item xs={8}>
+                    <Paper>
                     <Typography>
                     Have you ever wondered how much you and your friends really text each other? What your most used emojis are? What you really talk about the most? Maybe you're curious just how much you really use "lol" compared to your friends.
                     </Typography>
@@ -159,7 +161,9 @@ class FileUploadPage extends Component {
                     With this tool, you can see all of these statistics and more. All you have to do is download your message history from either Telegram or WhatsApp, and upload it to this page. Don't worry! It will get sent to our server for analysis, but we won't keep your data unless you explicitly give us permission, and even then, it will be anonymized and only used for research purposes. Enjoy!
                     </Typography>
                 </Paper>
-                <Paper style={{padding: 10, maxWidth: 800}}>
+                    </Grid>
+                    <Grid item xs={8}>
+                    <Paper style={{padding: 10}}>
                         <form onSubmit={this.onSubmit}>
                             <div style={{border: '4px dashed #4b9ec9'}}>
                                 <Dropzone 
@@ -284,6 +288,10 @@ class FileUploadPage extends Component {
                             <Button type="submit">Analyze</Button>
                         </form>
                 </Paper>
+                    </Grid>
+                </Grid>
+                
+                
                 {this.state.fileId ? 
                 <Paper>
                     <Typography>Thanks for submitting your file! In the future, you will be taken to a page to see your analysis</Typography>
