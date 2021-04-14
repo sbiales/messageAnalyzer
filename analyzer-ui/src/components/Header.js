@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { AppBar, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, Button } from '@material-ui/core';
 import { Link, withRouter } from "react-router-dom";
 
 class Header extends Component {
@@ -8,21 +8,15 @@ class Header extends Component {
             <div style={{width:'100%', marginBottom: 50 }}>
             <AppBar position="static" color="default">
             <Toolbar>
-                <Typography variant='h6' style={{flexGrow: 1}}>
-                    <Link exact to="/" style={{ textDecoration: 'none', color: 'black' }}>
-                        Analyze my messages!
-                    </Link>
-                </Typography>
-                <Typography variant='h6' style={{flexGrow: 1}}>
-                    <Link exact to="/" style={{ textDecoration: 'none', color: 'black' }}>
-                        How do I download my messages?
-                    </Link>
-                </Typography>
-                <Typography variant='h6' style={{flexGrow: 1}}>
-                    <Link exact to="/privacy" style={{ textDecoration: 'none', color: 'black' }}>
-                        Privacy
-                    </Link>
-                </Typography>
+                    <Button component={Link} to={"/"} style={{flexGrow: 1}}>
+                        <Typography>Analyze my messages!</Typography>
+                    </Button>
+                    <Button component={Link} to={"/"} style={{flexGrow: 1}}>
+                        <Typography>How do I download my messages?</Typography>
+                    </Button>
+                    <Button component={Link} to={"/privacy"} style={{flexGrow: 1}}>
+                        <Typography>Privacy</Typography>
+                    </Button>
             </Toolbar>
             </AppBar>
             </div>

@@ -151,8 +151,8 @@ class FileUploadPage extends Component {
       render() {
           return(
             <div style={{padding: '20px'}}>
-                <Grid container column spacing={3} justify='center' alignItems='center'>
-                    <Grid item xs={8}>
+                <Grid container direction='column' spacing={3} justify='center' alignItems='center'>
+                    <Grid item xs={7}>
                     <Paper>
                     <Typography>
                     Have you ever wondered how much you and your friends really text each other? What your most used emojis are? What you really talk about the most? Maybe you're curious just how much you really use "lol" compared to your friends.
@@ -162,7 +162,7 @@ class FileUploadPage extends Component {
                     </Typography>
                 </Paper>
                     </Grid>
-                    <Grid item xs={8}>
+                    <Grid item xs={7}>
                     <Paper style={{padding: 10}}>
                         <form onSubmit={this.onSubmit}>
                             <div style={{border: '4px dashed #4b9ec9'}}>

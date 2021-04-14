@@ -3,6 +3,7 @@ import { Typography, Paper, Grid } from '@material-ui/core';
 import axios from 'axios';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme, VictoryStack, VictoryTooltip, VictoryVoronoiContainer } from 'victory';
 import ReactWordcloud from 'react-wordcloud';
+import '../App.css';
 
 class Wordcloud extends Component {
     constructor(props) {
@@ -37,15 +38,18 @@ class Wordcloud extends Component {
         const options = {
             rotations: 2,
             rotationAngles: [-90, 0],
-          };
+            fontSizes: [8, 64],
+            deterministic: true,
+        };
         return ( !this.state.loaded ? <Paper>Loading...</Paper> :
             <Paper>
-                <Typography variant='h4'>Word usage</Typography>
-                <ReactWordcloud
-                words={this.state.data}
-                style={{width: '100%'}}
-                options={options}
-                />
+                <Typography variant='h4'>Word cloud</Typography>
+                <div className='wordcloud'>
+                    <ReactWordcloud
+                    words={this.state.data}
+                    options={options}
+                    />
+                </div>
             </Paper>
         )
     }
@@ -138,7 +142,6 @@ class Date extends Component {
     }
 
     calculateAverages = () => {
-        console.log(JSON.stringify(this.state.data));
         var u1 = [];
         var u2 =[];
         var users = Object.values(this.state.data);
@@ -151,10 +154,9 @@ class Date extends Component {
         var totalDays = this.getDateRange().length;
         var u1Avg = u1.reduce((a, b) => a + b, 0) / totalDays;
         var u2Avg = u2.reduce((a, b) => a + b, 0) / totalDays;
-        console.log(u1.reduce((a, b) => a + b, 0))
         this.setState({
-            u1Avg: u1Avg,
-            u2Avg: u2Avg
+            u1Avg: Math.round(u1Avg),
+            u2Avg: Math.round(u2Avg)
         });
     }
 
@@ -162,11 +164,11 @@ class Date extends Component {
         var bars = [];
         // if (this.getDateRange().length)
         Object.values(this.state.data).forEach((user) =>{
-            console.log(user)
             bars.push(<VictoryBar
                 data={user}
                 x="date"
                 y="total"
+                key={user}
             />);
         });
         return bars;
@@ -184,7 +186,7 @@ class Date extends Component {
     render() {
         return ( !this.state.loaded ? <Paper>Loading...</Paper> :
             <>
-                <Grid container column spacing={3}>
+                <Grid container spacing={3}>
                     <Grid item xs={12}>
                         <Paper>
                             <Typography variant='h4'>Texts per person each day</Typography>
@@ -205,9 +207,9 @@ class Date extends Component {
                                     // tickFormat specifies how ticks should be displayed
                                     tickFormat={(x) => x}
                                 />
-                                <VictoryAxis
+                                {/*<VictoryAxis
                                     tickFormat={(x) => x}
-                                />
+                                />*/}
                                 <VictoryStack colorScale={["tomato", "blue"]}>
                                     {this.renderBars()}
                                     {/*<VictoryBar
