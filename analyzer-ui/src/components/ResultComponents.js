@@ -5,6 +5,46 @@ import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme, VictoryStack, Vict
 import ReactWordcloud from 'react-wordcloud';
 import '../App.css';
 
+class Emoji extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            data: [],
+            loaded: false
+        }
+    }
+
+    componentDidMount = async () => {
+        this.setState({
+            data: await this.getResults(),
+            loaded: true
+        });
+    }
+
+    getResults = async () => {
+        var res = await axios({
+            method: "GET",
+            url: `http://localhost:3011/results/topemoji/${this.props.fileId}/${this.props.optIn}`,
+            headers: {
+              'Access-Control-Allow-Origin': '*'
+            }
+        });
+        if (res) {
+            return res.data;
+        }
+    }
+
+    render() {
+        return ( !this.state.loaded ? <Paper>Loading...</Paper> :
+            <Paper>
+                <Typography variant='h4'>Top Emoji</Typography>
+                <Typography>User 1: {Object.values(this.state.data)[0]}</Typography>
+                <Typography>User 2: {Object.values(this.state.data)[1]}</Typography>
+            </Paper>
+        )
+    }
+}
+
 class Wordcloud extends Component {
     constructor(props) {
         super(props);
@@ -42,7 +82,7 @@ class Wordcloud extends Component {
             deterministic: true,
         };
         return ( !this.state.loaded ? <Paper>Loading...</Paper> :
-            <Paper>
+            <Paper style={{overflowX: 'hidden', whiteSpace: 'nowrap'}}>
                 <Typography variant='h4'>Word cloud</Typography>
                 <div className='wordcloud'>
                     <ReactWordcloud
@@ -96,6 +136,7 @@ class Hour extends Component {
                 />
                 <VictoryAxis
                 tickFormat={(x) => x}
+                style={{tickLabels: {angle: 60, fontSize: '12px'} }}
                 />
                 <VictoryBar
                 data={this.state.data}
@@ -184,55 +225,42 @@ class Date extends Component {
     }
 
     render() {
-        return ( !this.state.loaded ? <Paper>Loading...</Paper> :
+        return (!this.state.loaded ? <Grid item xs={6}><Paper>Loading...</Paper></Grid> :
             <>
-                <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                        <Paper>
-                            <Typography variant='h4'>Texts per person each day</Typography>
-                            <VictoryChart domainPadding={20} style={{ width: '100%' }} containerComponent={
-                                <VictoryVoronoiContainer
-                                    labels={({ datum }) => `${datum.date}, ${datum.total}`}
-                                    labelComponent={
-                                        <VictoryTooltip
-                                            style={{ fontSize: 10 }}
-                                        />}
-                                />
-                            }>
-                                {/*<VictoryAxis
-                tickValues={this.getDateRange()}
-                />*/}
-                                <VictoryAxis
-                                    dependentAxis
-                                    // tickFormat specifies how ticks should be displayed
-                                    tickFormat={(x) => x}
-                                />
-                                {/*<VictoryAxis
-                                    tickFormat={(x) => x}
-                                />*/}
-                                <VictoryStack colorScale={["tomato", "blue"]}>
-                                    {this.renderBars()}
-                                    {/*<VictoryBar
-                        data={this.state.data[4506756110]}
-                        x="date"
-                        y="total"
-                    />
-                    <VictoryBar
-                        data={this.state.data[4820498873]}
-                        x="date"
-                        y="total"
-                    />*/}
-                                </VictoryStack>
-                            </VictoryChart>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Paper>
-                            <Typography variant='h4'>Average texts per day</Typography>
-                            <Typography>User 1: {this.state.u1Avg}</Typography>
-                            <Typography>User 2: {this.state.u2Avg}</Typography>
-                        </Paper>
-                    </Grid>
+                <Grid item xs={6}>
+                    <Paper>
+                        <Typography variant='h4'>Texts per person each day</Typography>
+                        <VictoryChart domainPadding={20} style={{ width: '100%' }} containerComponent={
+                            <VictoryVoronoiContainer
+                                labels={({ datum }) => `${datum.date}, ${datum.total}`}
+                                labelComponent={
+                                    <VictoryTooltip
+                                        style={{ fontSize: 10 }}
+                                    />}
+                            />
+                        }>
+                            <VictoryAxis
+                                dependentAxis
+                                // tickFormat specifies how ticks should be displayed
+                                tickFormat={(x) => x}
+                            />
+                            <VictoryAxis
+                                tickFormat={(x) => x}
+                                fixLabelOverlap={true}
+                                style={{ tickLabels: { angle: 60, fontSize: '10px', padding: 20 } }}
+                            />
+                            <VictoryStack colorScale={["tomato", "blue"]}>
+                                {this.renderBars()}
+                            </VictoryStack>
+                        </VictoryChart>
+                    </Paper>
+                </Grid>
+                <Grid item xs={6}>
+                    <Paper>
+                        <Typography variant='h4'>Average texts per day</Typography>
+                        <Typography>User 1: {this.state.u1Avg}</Typography>
+                        <Typography>User 2: {this.state.u2Avg}</Typography>
+                    </Paper>
                 </Grid>
             </>
         )
@@ -242,5 +270,6 @@ class Date extends Component {
 export {
     Hour,
     Date,
-    Wordcloud
+    Wordcloud,
+    Emoji
 };
