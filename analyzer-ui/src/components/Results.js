@@ -7,7 +7,6 @@ class Results extends Component {
         super(props);
         this.state = {
           fileId: null,
-          optIn: null,
           loaded: false
         };
     }
@@ -15,7 +14,6 @@ class Results extends Component {
     componentDidMount() {
         this.setState({
             fileId: localStorage.getItem('id'),
-            optIn: localStorage.getItem('optIn'),
             loaded: true
         });
     }
@@ -25,15 +23,15 @@ class Results extends Component {
             <div style={{ width: '95%', padding: 20 }}>
             <Grid container spacing={3}>
                 <Grid item xs={6} s={6}>
-                    <Hour fileId={this.state.fileId} optIn={this.state.optIn}/>
+                    <Hour fileId={this.state.fileId} />
                 </Grid>
-                    <Date fileId={this.state.fileId} optIn={this.state.optIn} />
+                    <Date fileId={this.state.fileId} />
 
                 <Grid item xs={6} s={6}>
-                    <Emoji fileId={this.state.fileId} optIn={this.state.optIn}/>
+                    <Emoji fileId={this.state.fileId} />
                 </Grid>
                 <Grid item xs={12}>
-                    <Wordcloud fileId={this.state.fileId} optIn={this.state.optIn}/>
+                    <Wordcloud fileId={this.state.fileId} />
                 </Grid>
             </Grid>
             </div>

@@ -13,25 +13,20 @@ import sys
 
 stopwords = set(stopwords.words('english'))
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'uploads')
-TMP_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'temp')
 META_FOLDER = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'meta')
 app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['TMP_FOLDER'] = TMP_FOLDER
 app.config['META_FOLDER'] = META_FOLDER
 
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
-    optIn = request.form['optIn']
     filename =  str(time.time()) + '.json'
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.mkdir(app.config['UPLOAD_FOLDER'])
     if not os.path.exists(app.config['META_FOLDER']):
         os.mkdir(app.config['META_FOLDER'])
-    if not os.path.exists(app.config['TMP_FOLDER']):
-        os.mkdir(app.config['TMP_FOLDER'])
     
     if file:            
         filetype = file.filename.split('.')[-1]
@@ -46,25 +41,18 @@ def upload():
             #messages = preprocessWhatsApp(file.readlines())
             messages = preprocessWhatsApp(content)
         
-        if optIn is True:
-            newFile = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w')
-            json.dump(messages, newFile)
-            newFile.close()
-            
-            # Save metadata
-            with open(os.path.join(app.config['META_FOLDER'], filename), 'w') as metaFile:
-                  data = {}
-                  data['user1'] = json.loads(request.form['user1'])
-                  data['user2'] = json.loads(request.form['user2'])
-                  data['relationship'] = request.form['relationship']
-                  json.dump(data, metaFile)
-            return filename, 200
-        else:
-            #print(len(messages), file=sys.stderr)
-            newFile = open(os.path.join(app.config['TMP_FOLDER'], filename), 'w')
-            json.dump(messages, newFile, indent=2)
-            newFile.close()
-            return filename, 200
+        newFile = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w')
+        json.dump(messages, newFile)
+        newFile.close()
+        
+        # Save metadata
+        with open(os.path.join(app.config['META_FOLDER'], filename), 'w') as metaFile:
+              data = {}
+              data['user1'] = json.loads(request.form['user1'])
+              data['user2'] = json.loads(request.form['user2'])
+              data['relationship'] = request.form['relationship']
+              json.dump(data, metaFile)
+        return filename, 200
     return 'No file uploaded', 400
 
 def preprocessTelegram(messages):
@@ -125,15 +113,10 @@ def preprocessWhatsApp(chatText):
             message['text'] += line
     return messages
     
-def getMessagesFromFile(fileId, optIn):
+def getMessagesFromFile(fileId):
     messages = []
-    if optIn is True:
-        with open(os.path.join(app.config['UPLOAD_FOLDER'], fileId), 'r') as file:
-            messages = json.load(file)
-    else:
-        with open(os.path.join(app.config['TMP_FOLDER'], fileId), 'r') as file:
-            messages = json.load(file)
-            
+    with open(os.path.join(app.config['UPLOAD_FOLDER'], fileId), 'r') as file:
+        messages = json.load(file)
     return messages
 
 def extractEmoji(text):
@@ -150,9 +133,9 @@ def extractEmoji(text):
 #                               API ENDPOINTS                                #
 ##############################################################################
 
-@app.route('/results/bydatecount/<fileId>/<optIn>', methods=['GET'])
-def organizeByDate(fileId, optIn):
-    messages = getMessagesFromFile(fileId, optIn)
+@app.route('/results/bydatecount/<fileId>', methods=['GET'])
+def organizeByDate(fileId):
+    messages = getMessagesFromFile(fileId)
 
     dateDict = {}
     for m in messages:
@@ -182,9 +165,9 @@ def organizeByDate(fileId, optIn):
     # byUser['endDate'] = messages[-1]['date']
     return jsonify(byUser)
 
-@app.route('/results/byhourcount/<fileId>/<optIn>', methods=['GET'])
-def organizeByHour(fileId, optIn):
-    messages = getMessagesFromFile(fileId, optIn)
+@app.route('/results/byhourcount/<fileId>', methods=['GET'])
+def organizeByHour(fileId):
+    messages = getMessagesFromFile(fileId)
     
     '''
     hourJSON structure:
@@ -211,9 +194,9 @@ def organizeByHour(fileId, optIn):
     hourJSON['data'] = [{'hour': k, 'texts': hourDict[k]} for k in hourDict.keys()]
     return jsonify(hourJSON)
 
-@app.route('/results/topemoji/<fileId>/<optIn>', methods=['GET'])
-def getTopEmoji(fileId, optIn):
-    messages = getMessagesFromFile(fileId, optIn)
+@app.route('/results/topemoji/<fileId>', methods=['GET'])
+def getTopEmoji(fileId):
+    messages = getMessagesFromFile(fileId)
     
     users = list({m['from'] for m in messages})
     user1Messages = [m['text'] for m in messages if m['from'] == users[0]]
@@ -235,9 +218,9 @@ def getTopEmoji(fileId, optIn):
     topEmoji[users[1]] = [e[0] for e in emojiListU2[:10]]
     return jsonify(topEmoji)
 
-@app.route('/results/wordcloud/<fileId>/<optIn>', methods=['GET'])
-def getWordcloud(fileId, optIn):
-    messages = getMessagesFromFile(fileId, optIn)
+@app.route('/results/wordcloud/<fileId>', methods=['GET'])
+def getWordcloud(fileId):
+    messages = getMessagesFromFile(fileId)
     
     text = [m['text'] for m in messages]
     
@@ -250,62 +233,3 @@ def getWordcloud(fileId, optIn):
     wordJSON = {}
     wordJSON['data'] = [{'text': elem[0], 'value': elem[1]} for elem in bow]
     return jsonify(wordJSON)
-    
-    
-
-# =============================================================================
-# with open('C:\\Users\\siena\\Downloads\\Telegram Desktop\\ChatExport_2020-11-23\\filip.json', 'r', encoding='utf-8') as file:
-# #with open('.\\test.json', 'r', encoding='utf-8') as file:
-#     messageJson = json.load(file)
-#     messages = messageJson['messages']
-# 
-#     # Data preprocessing
-#     messages = preprocess(messages)
-#     users = list({m['from_id'] for m in messages})
-#     user1Messages = [m for m in messages if m['from_id'] == users[0]]
-#     user2Messages = [m for m in messages if m['from_id'] == users[1]]
-# 
-# ##    with open('user1.txt', 'w', encoding='utf-8') as u1:
-# ##        for t in user1Messages:
-# ##            u1.write(t + '\n')
-# ##    with open('user2.txt', 'w', encoding='utf-8') as u2:
-# ##        for t in user2Messages:
-# ##            u2.write(t + '\n')
-# ##    with open('total.txt', 'w', encoding='utf-8') as totalFile:
-# ##        for m in messages:
-# ##            totalFile.write(str(m['from_id']) + ': ' + m['text'] + '\n')
-# 
-#     # Graph of texts per day (from each person)
-#     daySorted = organizeByDate(messages)
-#     #print(daySorted)
-# 
-#     # Chart of hours of the day that you text most frequently
-#     hourSorted = organizeByHour(messages)
-#     #print(hourSorted)
-#     print('Most frequent texting hour: ' + max(hourSorted, key=lambda key: hourSorted[key]))
-#     
-#     # Average texts per day
-#     totalDays = len(daySorted.keys())
-#     totalTexts = sum(list({day['total'] for day in daySorted.values()}))
-#     avgTextsPerDay = totalTexts/totalDays
-#     print('Average texts per day: ' + str(int(avgTextsPerDay)))
-# 
-#     # Average words per day?
-# 
-#     # Average words per text
-# 
-# 
-#     # Favorite emoji
-#     
-#     #print(user2Messages)
-#     user1Emoji = extractEmoji(user1Messages)
-#     print(str(users[0]) + ': ')
-#     print(user1Emoji[:25])
-# 
-#     user2Emoji = extractEmoji(user2Messages)
-#     print(str(users[1]) + ': ')
-#     print(user2Emoji[:25])
-# 
-#     # Most frequent words/collocations
-# 
-# =============================================================================

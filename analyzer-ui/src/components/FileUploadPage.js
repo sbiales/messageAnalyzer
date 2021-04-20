@@ -66,20 +66,17 @@ class FileUploadPage extends Component {
         e.preventDefault();
         var data = new FormData();
         data.append('file', this.state.file);
-        data.append('optIn', this.state.optIn);
-        if (this.state.optIn) {
-            data.append('user1', JSON.stringify({
-                age: this.state.u1Age,
-                lang: this.state.u1lang,
-                gender: this.state.u1Gender,
-            }));
-            data.append('user2', JSON.stringify({
-                age: this.state.u2Age,
-                lang: this.state.u2lang,
-                gender: this.state.u2Gender,
-            }));
-            data.append('relationship', this.state.relationship);
-        }
+        data.append('user1', JSON.stringify({
+            age: this.state.u1Age,
+            lang: this.state.u1lang,
+            gender: this.state.u1Gender,
+        }));
+        data.append('user2', JSON.stringify({
+            age: this.state.u2Age,
+            lang: this.state.u2lang,
+            gender: this.state.u2Gender,
+        }));
+        data.append('relationship', this.state.relationship);
         var res = await axios({
             method: "POST",
             url: "http://localhost:3011/upload",
@@ -104,7 +101,6 @@ class FileUploadPage extends Component {
         if (res) {
             // this.setState({ fileId: res.data});
             localStorage.setItem('id', res.data);
-            localStorage.setItem('optIn', this.state.optIn);
             this.props.history.push('/results');
         }
 
@@ -148,6 +144,11 @@ class FileUploadPage extends Component {
         });
       }
 
+      validateFields = () => {
+          return this.state.file && this.state.optIn && this.state.u1Age && this.state.u2Age && this.state.u1Lang
+            && this.state.u2Lang && this.state.u1Gender && this.state.u2Gender && this.state.relationship;
+      }
+
       render() {
           return(
             <div style={{padding: '20px'}}>
@@ -183,16 +184,7 @@ class FileUploadPage extends Component {
                             </div>
                             <div style={{textAlign: 'left'}}>
                             <Typography>Selected file: {this.state.file ? this.state.file.name : ''}</Typography>
-                            <FormControlLabel
-                                control={<Checkbox 
-                                    checked={this.state.optIn}
-                                    onChange={(event) => {this.setState({optIn: event.target.checked})}}
-                                    name='optIn'
-                                    />}
-                                label='Yes, you may save my file anonymously for research purposes. I understand that my data will never be sold or used for other purposes.'
-                            />
                             </div>
-                            {this.state.optIn ?
                             <div style={{width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column'}}>
                             <Typography variant='h6'>Please tell us a little bit more about yourself:</Typography>
                             <TextField 
@@ -283,14 +275,20 @@ class FileUploadPage extends Component {
                                     <FormControlLabel value="other" control={<Radio />} label="Other" />
                                 </RadioGroup>
                             </FormControl>
+                            <FormControlLabel
+                                control={<Checkbox 
+                                    checked={this.state.optIn}
+                                    onChange={(event) => {this.setState({optIn: event.target.checked})}}
+                                    name='optIn'
+                                    />}
+                                label='Yes, you may save my file anonymously for research purposes. I understand that my data will never be sold or used for other purposes.'
+                            />
                             </div>
-                            :''}
-                            <Button type="submit">Analyze</Button>
+                            <Button type="submit" disabled={!this.validateFields()}>Analyze</Button>
                         </form>
                 </Paper>
                     </Grid>
                 </Grid>
-                
                 
                 {this.state.fileId ? 
                 <Paper>
