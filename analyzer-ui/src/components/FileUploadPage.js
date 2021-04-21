@@ -99,8 +99,9 @@ class FileUploadPage extends Component {
             }
         });
         if (res) {
-            // this.setState({ fileId: res.data});
-            localStorage.setItem('id', res.data);
+            localStorage.setItem('id', res.data.filename);
+            localStorage.setItem('user1', res.data.user1);
+            localStorage.setItem('user2', res.data.user2);
             this.props.history.push('/results');
         }
 
@@ -123,21 +124,24 @@ class FileUploadPage extends Component {
       }
 
       onDropRejected = rejectedFiles => {
-        const sizeMsg = `The file exceeds the maximum size limit (${MAX_SIZE} bytes)`;
         const defaultMsg = "An error occurred during upload";
         var errorFiles = [];
-        rejectedFiles.forEach(function(file) {
-          if(file.size > MAX_SIZE) {
+        try {
+            rejectedFiles.forEach(function(file) {
+                file.errors.forEach(function(error) {
+                    errorFiles.push({
+                        name: file.file.name,
+                        reason: error.message
+                    });
+                });
+            });
+        } catch (e) {
             errorFiles.push({
-              name: file.name,
-              reason: sizeMsg});
-          }
-          else {
-            errorFiles.push({
-              name: file.name,
-              reason: defaultMsg});
-          }
-        });
+                name: 'ERROR',
+                reason: defaultMsg
+            });
+        }
+        
         this.setState({
           uploadErrorMsgs: [...this.state.uploadErrorMsgs, ...errorFiles],
           showUploadError: true
@@ -173,6 +177,7 @@ class FileUploadPage extends Component {
                                     multiple={false}
                                     accept=".json,.txt"
                                     // maxSize={MAX_SIZE}
+                                    minSize={1}
                                 >
                                     {({getRootProps, getInputProps}) => (
                                         <div {...getRootProps()}>

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Typography, Paper, Grid } from '@material-ui/core';
 import axios from 'axios';
-import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme, VictoryStack, VictoryTooltip, VictoryVoronoiContainer } from 'victory';
+import { VictoryBar, VictoryChart, VictoryAxis, VictoryLegend, VictoryStack, VictoryTooltip, VictoryVoronoiContainer } from 'victory';
 import ReactWordcloud from 'react-wordcloud';
 import '../App.css';
 
@@ -17,6 +17,8 @@ class Emoji extends Component {
     componentDidMount = async () => {
         this.setState({
             data: await this.getResults(),
+            user1: localStorage.getItem('user1'),
+            user2: localStorage.getItem('user2'),
             loaded: true
         });
     }
@@ -38,8 +40,8 @@ class Emoji extends Component {
         return ( !this.state.loaded ? <Paper>Loading...</Paper> :
             <Paper>
                 <Typography variant='h4'>Top Emoji</Typography>
-                <Typography>User 1: {Object.values(this.state.data)[0]}</Typography>
-                <Typography>User 2: {Object.values(this.state.data)[1]}</Typography>
+                <Typography>{this.state.user1}: {this.state.data.user1}</Typography>
+                <Typography>{this.state.user2}: {this.state.data.user2}</Typography>
             </Paper>
         )
     }
@@ -164,6 +166,8 @@ class Date extends Component {
     componentDidMount = async () => {
         this.setState({
             data: await this.getResults(),
+            user1: localStorage.getItem('user1'),
+            user2: localStorage.getItem('user2'),
             loaded: true
         }, this.calculateAverages);
     }
@@ -185,11 +189,10 @@ class Date extends Component {
     calculateAverages = () => {
         var u1 = [];
         var u2 =[];
-        var users = Object.values(this.state.data);
-        users[0].forEach(day => {
+        this.state.data.user1.forEach(day => {
             u1.push(day.total);
         });
-        users[1].forEach(day => {
+        this.state.data.user2.forEach(day => {
             u2.push(day.total);
         });
         var totalDays = this.getDateRange().length;
@@ -239,6 +242,20 @@ class Date extends Component {
                                     />}
                             />
                         }>
+                            <VictoryLegend
+                                data={[
+                                    {
+                                        name: this.state.user1,
+                                        labels: { fill: "tomato", fontSize: 12 },
+                                        symbol: { fill: "tomato" }
+                                    },
+                                    {
+                                        name: this.state.user2,
+                                        labels: { fill: "blue", fontSize: 12 },
+                                        symbol: { fill: "blue" }
+                                    }
+                                ]}
+                            />
                             <VictoryAxis
                                 dependentAxis
                                 // tickFormat specifies how ticks should be displayed
@@ -258,8 +275,8 @@ class Date extends Component {
                 <Grid item xs={6}>
                     <Paper>
                         <Typography variant='h4'>Average texts per day</Typography>
-                        <Typography>User 1: {this.state.u1Avg}</Typography>
-                        <Typography>User 2: {this.state.u2Avg}</Typography>
+                        <Typography>{this.state.user1}: {this.state.u1Avg}</Typography>
+                        <Typography>{this.state.user2}: {this.state.u2Avg}</Typography>
                     </Paper>
                 </Grid>
             </>

@@ -31,18 +31,16 @@ def upload():
     if file:            
         filetype = file.filename.split('.')[-1]
         content = file.read().decode('utf-8')
-        messages = []
+        processed = {}
         # Preprocess the file before saving
         if filetype == 'json':
-            #messageJson = json.load(file)
             messageJson = json.loads(content)
-            messages = preprocessTelegram(messageJson['messages'])
+            processed = preprocessTelegram(messageJson)
         elif filetype == 'txt':
-            #messages = preprocessWhatsApp(file.readlines())
-            messages = preprocessWhatsApp(content)
+            processed = preprocessWhatsApp(content)
         
         newFile = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w')
-        json.dump(messages, newFile)
+        json.dump(processed['messages'], newFile)
         newFile.close()
         
         # Save metadata
@@ -52,16 +50,26 @@ def upload():
               data['user2'] = json.loads(request.form['user2'])
               data['relationship'] = request.form['relationship']
               json.dump(data, metaFile)
-        return filename, 200
+              
+        returnObj = {
+            'user1': processed['user1'],
+            'user2': processed['user2'],
+            'filename': filename
+        }
+        return jsonify(returnObj), 200
     return 'No file uploaded', 400
 
-def preprocessTelegram(messages):
+def preprocessTelegram(messageJson):
+    messages = messageJson['messages']
+    user2Id = messageJson['id']
+    user1 = ''
+    user2 = ''
     cleanMessages = []
     for m in messages:
         if m['type'] != 'message':
             continue
         cleanM = {}
-        cleanM['from'] = m['from_id']
+        cleanM['from'] = 'user2' if m['from_id'] == user2Id else 'user1'
         datetime = m['date'].split('T')
         cleanM['date'] = datetime[0]
         cleanM['time'] = datetime[1]
@@ -81,12 +89,25 @@ def preprocessTelegram(messages):
         elif 'text' in m:
             cleanM['text'] = m['text'].replace('\n', ' ')
         cleanMessages.append(cleanM)
-    return cleanMessages
+        
+        # Add the user names
+        if user2 == '' and m['from_id'] == user2Id:
+            user2 = m['from']
+        if user1 == '' and m['from_id'] != user2Id:
+            user1 = m['from']
+    
+    return {
+        'messages': cleanMessages,
+        'user1': user1,
+        'user2': user2
+        }
 
 def preprocessWhatsApp(chatText):
     chatText = chatText.split('\n')
     mediaRE = re.compile(r"(\<Media omitted\>)")
     lineMetaRE = re.compile(r"(\d+\/\d+\/\d+),*\s(\d+:\d+)\s*(\w*)\s-\s(.*?):\s")
+    user1 = ''
+    user2 = ''
     
     messages = []
     message = {}
@@ -107,11 +128,19 @@ def preprocessWhatsApp(chatText):
             
             message['date'] = match.group(1)
             message['time'] = time
-            message['from'] = match.group(4)
+            if user1 == '':
+                user1 = match.group(4)
+            elif user2 == '' and user1 != match.group(4):
+                user2 = match.group(4)
+            message['from'] = 'user1' if match.group(4) == user1 else 'user2'
             message['text'] = lineMetaRE.sub('', line).replace('\n', ' ')
         elif 'text' in message:
             message['text'] += line
-    return messages
+    return {
+        'messages': messages,
+        'user1': user1,
+        'user2': user2
+        }
     
 def getMessagesFromFile(fileId):
     messages = []
@@ -198,9 +227,9 @@ def organizeByHour(fileId):
 def getTopEmoji(fileId):
     messages = getMessagesFromFile(fileId)
     
-    users = list({m['from'] for m in messages})
-    user1Messages = [m['text'] for m in messages if m['from'] == users[0]]
-    user2Messages = [m['text'] for m in messages if m['from'] == users[1]]
+    # users = list({m['from'] for m in messages})
+    user1Messages = [m['text'] for m in messages if m['from'] == 'user1']
+    user2Messages = [m['text'] for m in messages if m['from'] == 'user2']
 
     emojiListU1 = extractEmoji(' '.join(user1Messages))
     emojiListU2 = extractEmoji(' '.join(user2Messages))
@@ -214,8 +243,8 @@ def getTopEmoji(fileId):
         }
     '''
     topEmoji = {}
-    topEmoji[users[0]] = [e[0] for e in emojiListU1[:10]]
-    topEmoji[users[1]] = [e[0] for e in emojiListU2[:10]]
+    topEmoji['user1'] = [e[0] for e in emojiListU1[:10]]
+    topEmoji['user2'] = [e[0] for e in emojiListU2[:10]]
     return jsonify(topEmoji)
 
 @app.route('/results/wordcloud/<fileId>', methods=['GET'])

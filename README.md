@@ -21,6 +21,8 @@ pip install emoji
 pip install regex
 pip install Flask
 pip install flask-cors
+pip install nltk
+python -m nltk.downloader 'punkt'
 ```
 Note: for a local pip installation/on a machine with both Python2 and Python3, use the following commands instead
 
@@ -29,6 +31,8 @@ pip3 install --user emoji
 pip3 install --user regex
 pip3 install --user Flask
 pip3 install --user flask-cors
+pip3 install --user nltk
+python3 -m nltk.downloader 'punkt'
 ```
 
 ### Running in a development environment
