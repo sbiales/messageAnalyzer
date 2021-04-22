@@ -176,7 +176,7 @@ class FileUploadPage extends Component {
                                     onDropRejected={this.onDropRejected}
                                     multiple={false}
                                     accept=".json,.txt"
-                                    // maxSize={MAX_SIZE}
+                                    maxSize={MAX_SIZE}
                                     minSize={1}
                                 >
                                     {({getRootProps, getInputProps}) => (

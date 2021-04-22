@@ -11,7 +11,7 @@ class Header extends Component {
                     <Button component={Link} to={"/"} style={{flexGrow: 1}}>
                         <Typography>Analyze my messages!</Typography>
                     </Button>
-                    <Button component={Link} to={"/"} style={{flexGrow: 1}}>
+                    <Button component={Link} to={"/howto"} style={{flexGrow: 1}}>
                         <Typography>How do I download my messages?</Typography>
                     </Button>
                     <Button component={Link} to={"/privacy"} style={{flexGrow: 1}}>
