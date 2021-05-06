@@ -4,6 +4,7 @@ import axios from 'axios';
 import { VictoryBar, VictoryChart, VictoryAxis, VictoryLegend, VictoryStack, VictoryTooltip, VictoryVoronoiContainer } from 'victory';
 import ReactWordcloud from 'react-wordcloud';
 import '../App.css';
+import Config from '../config';
 
 class Emoji extends Component {
     constructor(props) {
@@ -26,7 +27,7 @@ class Emoji extends Component {
     getResults = async () => {
         var res = await axios({
             method: "GET",
-            url: `http://localhost:3011/results/topemoji/${this.props.fileId}`,
+            url: `${Config.api}/results/topemoji/${this.props.fileId}`,
             headers: {
               'Access-Control-Allow-Origin': '*'
             }
@@ -66,7 +67,7 @@ class Wordcloud extends Component {
     getResults = async () => {
         var res = await axios({
             method: "GET",
-            url: `http://localhost:3011/results/wordcloud/${this.props.fileId}`,
+            url: `${Config.api}/results/wordcloud/${this.props.fileId}`,
             headers: {
               'Access-Control-Allow-Origin': '*'
             }
@@ -116,7 +117,7 @@ class Hour extends Component {
     getResults = async () => {
         var res = await axios({
             method: "GET",
-            url: `http://localhost:3011/results/byhourcount/${this.props.fileId}`,
+            url: `${Config.api}/results/byhourcount/${this.props.fileId}`,
             headers: {
               'Access-Control-Allow-Origin': '*'
             }
@@ -175,13 +176,13 @@ class Date extends Component {
     getResults = async () => {
         var res = await axios({
             method: "GET",
-            url: `http://localhost:3011/results/bydatecount/${this.props.fileId}`,
+            url: `${Config.api}/results/bydatecount/${this.props.fileId}`,
             headers: {
               'Access-Control-Allow-Origin': '*'
             }
         });
         if (res) {
-            //console.log(res)
+            console.log(res)
             return res.data;
         }
     }

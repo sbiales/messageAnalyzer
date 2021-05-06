@@ -4,6 +4,7 @@ import { Dialog, Toolbar, Paper, Grid, Typography, Button, Checkbox, FormControl
 import { Form, Field } from "react-final-form";
 import { withRouter } from "react-router-dom";
 import axios from "axios";
+import Config from '../config';
 
 const MAX_SIZE = 20971520; // 20MB
 
@@ -79,7 +80,7 @@ class FileUploadPage extends Component {
         data.append('relationship', this.state.relationship);
         var res = await axios({
             method: "POST",
-            url: "http://localhost:3011/upload",
+            url: `${Config.api}/upload`,
             data: data,
             headers: {
               'Content-Type': 'multipart/form-data; boundary=${form._boundary}',
@@ -111,16 +112,6 @@ class FileUploadPage extends Component {
         console.log(acceptedFiles)
           // Initial FormData
           this.setState({file: acceptedFiles[0]});
-          /*const formData = new FormData();
-          formData.append("file", file);
-          // Make an AJAX upload request using Axios
-          return axios.post("localhost/uploadFile", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          }).catch(error => {
-            this.setState({
-              uploadErrorMsgs: [...this.state.uploadErrorMsgs, {name: file.name, reason: error.response.data}],
-              showUploadError: true});
-          });*/
       }
 
       onDropRejected = rejectedFiles => {
@@ -286,7 +277,7 @@ class FileUploadPage extends Component {
                                     onChange={(event) => {this.setState({optIn: event.target.checked})}}
                                     name='optIn'
                                     />}
-                                label='Yes, you may save my file anonymously for research purposes. I understand that my data will never be sold or used for other purposes.'
+                                label='Yes, you may save my file anonymously for research purposes. I understand that my data will never be sold or used for other purposes. I have read and agree to the privacy policy.'
                             />
                             </div>
                             <Button type="submit" disabled={!this.validateFields()}>Analyze</Button>

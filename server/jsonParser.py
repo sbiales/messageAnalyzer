@@ -61,7 +61,7 @@ def upload():
 
 def preprocessTelegram(messageJson):
     messages = messageJson['messages']
-    user2Id = messageJson['id']
+    user2Id = 'user' + str(messageJson['id'])
     user1 = ''
     user2 = ''
     cleanMessages = []
