@@ -6,6 +6,7 @@ With this tool, you can see all of these statistics and more. All you have to do
 
 ### System overview
 Frontend: Made using React, MaterialUI, Victory charts and a handful of other helpful libraries
+
 Backend: Made using Python and Flask, using nltk and a handful of other libraries
 
 ### Data retrieval
@@ -67,7 +68,9 @@ flask run --host=0.0.0.0 -p 3011
 ```
 
 The first `export` statement tells Flask what file to start up as "main".
-The second `export` statement is technically optional (and obviously only for development) but lets Flask behave like React in that it will automatically reload without needing to stop and start the server if you save any code changes.
+
+The second `export` statement is technically optional (and obviously only for development) but lets Flask behave like React in that it will automatically reload without needing to stop and restart the server if you save any code changes.
+
 The third line starts up the server, makes it visible to IPs outside of localhost, and runs it at port 3011. If you do not wish to run it on port 3011, either remove the `-p 3011` argument entirely or change the port number (and adjust the `config.js` file on the frontend accordingly as described above).
 
 ### Running in production
